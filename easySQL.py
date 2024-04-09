@@ -6,25 +6,11 @@ STRING = 'string'
 INTEGER = 'integer'
 UNIQUE = 'UNIQUE'
 JSON = 'string' # TODO: create a function for converting lists and dict into json string and back
-database = None
-
-# TODO: add functionality to seek all entries in a filter that CONTAINS a string
-
 
 def VALDATED_STRING():
     return 'string'
 
-def intergrate(database_path: pathlib.Path = None) -> sqlite3.Connection:
-
-    if not database_path:
-        database_path = pathlib.Path("test.sqlite")
-
-    global database 
-    database = sqlite3.connect(database=database_path.absolute())
-    return database
-
-
-def Table(cls):
+def Table(path_to_database: pathlib.Path | str):
     """ easySQL decorator for table classes for easy instantiation of many of the SQL_execute strings.
 
     This class will always need these variables defined within its __init__ method;
@@ -40,113 +26,122 @@ def Table(cls):
     Returns:
         Table: returns a Table class wrapped around the original class.
     """
-    class Table(cls):
-        def __init__(self, *args, **kwargs) -> None:
-            super(Table, self).__init__(*args, **kwargs)
-            self.data_object = namedtuple(f"{self.name}_row", list(self.columns.keys()))
-            self.columns_validation = len(self.columns)
-        
-        def __repr__(self):
-            return f"{self.__class__.__name__} ('{self.name}')"
-        
-        @property
-        def create_table(self):
-            def manufacture_create_SQL_string() -> str:
-                """ Takes the super()'s columns dictionary and bulds parts of the SQL_execute string.
+    def wrapper(cls):
+        class Table(cls):
+            def __init__(self, *args, **kwargs) -> None:
+                super(Table, self).__init__(*args, **kwargs)
+                self.path_to_database = path_to_database
+                self.data_object = namedtuple(f"{self.name}_row", list(self.columns.keys()))
+                self.columns_validation = len(self.columns)
 
-                Returns:
-                    str: middle of create table SQL_execute string.
-                """
-                # TODO: very crude way of doing it, research a better way.
-                middle_string = 'id integer PRIMARY KEY, '
-                current_count = 0
-                for column_name, column_type in self.columns.items():
-                    if current_count == len(self.columns.items())-1:
-                        middle_string += f"{column_name} {column_type}"
-                    else:
-                        middle_string += f"{column_name} {column_type}, "
-                    current_count += 1
-                return middle_string
-            return f"CREATE TABLE {self.name} ({manufacture_create_SQL_string()});"    
-        
-        @property
-        def drop_table(self):
-            return f"DROP TABLE {self.name};"
-        
-        def select_row(self, column: str = None, match = None):
-            if column:
-                return f"SELECT * FROM {self.name} WHERE {column}= '{match}'"
-            else:
-                return f"SELECT * FROM {self.name}"
-        
-        def insert_row(self, data) -> namedtuple:
+            def __repr__(self):
+                return f"{self.__class__.__name__} ('{self.name}'@'{self.path_to_database}')"
             
-            def manufacture_insert_SQL_String():
-                middle_string = '('
-                gavel_string = '('
-                current_count = 0
-                for column_name in self.columns.keys():
-                    if current_count == len(self.columns.items())-1:
-                        middle_string += f"{column_name})"
-                        gavel_string += f"?)"
-                    else:
-                        middle_string += f"{column_name}, "
-                        gavel_string += f"?, "
-                    current_count += 1
-                return f"{middle_string} VALUES {gavel_string}"
-            
-            query = namedtuple('Query', ['query', 'data'])
-            if len(data) == self.columns_validation:
-                return query(query=f"INSERT INTO {self.name}{manufacture_insert_SQL_String()}", data=data)
-            else:
-                return query(query=False, data= f"passed data to {self.name} is not the right length of entries")
-        
-        def update_row_by_id(self, data: dict, id: str):
-            """ Update a row at {id} with {data}.
+            def get_database(self):
+                """ Returns the database specific to this table."""
+                if isinstance(path_to_database, pathlib.Path):
+                    return sqlite3.connect(database=path_to_database.absolute())
+                if isinstance(path_to_database, str):
+                    return sqlite3.connect(database=path_to_database)
 
-            Args:
-                data (dict): key = column, value = data to update to
-                id (str): row_id in Table
-            """
-            def manufactur_update_SQL_string(data: dict) -> str:
-                """ takes data and builds a SQL_execute string segment
+            @property
+            def create_table(self):
+                def manufacture_create_SQL_string() -> str:
+                    """ Takes the super()'s columns dictionary and bulds parts of the SQL_execute string.
+
+                    Returns:
+                        str: middle of create table SQL_execute string.
+                    """
+                    # TODO: very crude way of doing it, research a better way.
+                    middle_string = 'id integer PRIMARY KEY, '
+                    current_count = 0
+                    for column_name, column_type in self.columns.items():
+                        if current_count == len(self.columns.items())-1:
+                            middle_string += f"{column_name} {column_type}"
+                        else:
+                            middle_string += f"{column_name} {column_type}, "
+                        current_count += 1
+                    return middle_string
+                return f"CREATE TABLE {self.name} ({manufacture_create_SQL_string()});"    
+            
+            @property
+            def drop_table(self):
+                return f"DROP TABLE {self.name};"
+            
+            def select_row(self, column: str = None, match = None):
+                if column:
+                    return f"SELECT * FROM {self.name} WHERE {column}= '{match}'"
+                else:
+                    return f"SELECT * FROM {self.name}"
+            
+            def insert_row(self, data) -> namedtuple:
+                
+                def manufacture_insert_SQL_String():
+                    middle_string = '('
+                    gavel_string = '('
+                    current_count = 0
+                    for column_name in self.columns.keys():
+                        if current_count == len(self.columns.items())-1:
+                            middle_string += f"{column_name})"
+                            gavel_string += f"?)"
+                        else:
+                            middle_string += f"{column_name}, "
+                            gavel_string += f"?, "
+                        current_count += 1
+                    return f"{middle_string} VALUES {gavel_string}"
+                
+                query = namedtuple('Query', ['query', 'data'])
+                if len(data) == self.columns_validation:
+                    return query(query=f"INSERT INTO {self.name}{manufacture_insert_SQL_String()}", data=data)
+                else:
+                    return query(query=False, data= f"passed data to {self.name} is not the right length of entries")
+            
+            def update_row_by_id(self, data: dict, id: str):
+                """ Update a row at {id} with {data}.
 
                 Args:
-                    data (dict): Key = column, value = data to update to
+                    data (dict): key = column, value = data to update to
+                    id (str): row_id in Table
+                """
+                def manufactur_update_SQL_string(data: dict) -> str:
+                    """ takes data and builds a SQL_execute string segment
+
+                    Args:
+                        data (dict): Key = column, value = data to update to
+
+                    Returns:
+                        _type_: middle segment of SQL_execute string
+                    """
+                    # TODO: this is a very crude implementtion
+                    middle_string = ''
+                    current_count = 0
+                    for key, value in data.items():
+                        if current_count == len(data.items())-1:
+                            middle_string += f" {key} = '{value}'"
+                        else:
+                            middle_string += f" {key} = '{value}', "
+                        current_count += 1
+                    return middle_string
+                return f"UPDATE {self.name} SET{manufactur_update_SQL_string(data)} WHERE id = {id}"
+
+            def convert_data(self, rows: list | tuple):
+                """ Takes rows returned by the tables SQL_select string and returns them as namedtuples.
+
+                Args:
+                    rows (listortuple): 
 
                 Returns:
-                    _type_: middle segment of SQL_execute string
+                    (listortuple): returns a list of namedtuple.
                 """
-                # TODO: this is a very crude implementtion
-                middle_string = ''
-                current_count = 0
-                for key, value in data.items():
-                    if current_count == len(data.items())-1:
-                        middle_string += f" {key} = '{value}'"
-                    else:
-                        middle_string += f" {key} = '{value}', "
-                    current_count += 1
-                return middle_string
-            return f"UPDATE {self.name} SET{manufactur_update_SQL_string(data)} WHERE id = {id}"
-
-        def convert_data(self, rows: list | tuple):
-            """ Takes rows returned by the tables SQL_select string and returns them as namedtuples.
-
-            Args:
-                rows (listortuple): 
-
-            Returns:
-                (listortuple): returns a list of namedtuple.
-            """
-            self.keys = list(self.columns.keys())
-            if isinstance(rows, list):
-                return [self.data_object(**{key: data[i+1] for i, key in enumerate(self.keys)}) for  data in rows]
-            if isinstance(rows, tuple):
-                return [self.data_object(**{key: rows[i+1] for i, key in enumerate(self.keys)})][0]
-        
-        
-    return Table
-
+                self.keys = list(self.columns.keys())
+                if isinstance(rows, list):
+                    return [self.data_object(**{key: data[i+1] for i, key in enumerate(self.keys)}) for  data in rows]
+                if isinstance(rows, tuple):
+                    return [self.data_object(**{key: rows[i+1] for i, key in enumerate(self.keys)})][0]
+            
+            
+        return Table
+    return wrapper
 
 def basic_query(query: str):
     """ Used as single query functions, ex. creating tables, dropping tables, updating rows
@@ -154,7 +149,7 @@ def basic_query(query: str):
     Args:
         query (str): SQL_execute string
     """
-    with database:
+    with table.get_database() as database:
         cursor = database.cursor()            
         cursor.execute(query)
         
@@ -164,7 +159,7 @@ def create_table(table: Table, drop=False):
         drop_table(table=table)
         
     try:
-        with database:
+        with table.get_database() as database:
             cursor = database.cursor()            
             cursor.execute(table.create_table)
     except sqlite3.OperationalError:
@@ -172,7 +167,7 @@ def create_table(table: Table, drop=False):
     
 def drop_table(table: Table):
     try:
-        with database:
+        with table.get_database() as database:
             cursor = database.cursor()            
             cursor.execute(table.drop_table)
     except sqlite3.OperationalError:
@@ -181,7 +176,7 @@ def drop_table(table: Table):
     
 def update_table_row_by_id(table: Table, row):
     query = table.update_row_by_id(data=row[1], id=row[0])
-    with database:
+    with table.get_database() as database:
         cursor = database.cursor()            
         cursor.execute(query)
 
@@ -194,7 +189,7 @@ def insert_into_table(table, data):
     """
     query = table.insert_row(data)
     assert query.query, query.data
-    with database:
+    with table.get_database() as database:
         cursor = database.cursor()
         cursor.execute(query.query, query.data)
     
@@ -204,7 +199,7 @@ def fetchone_from_table(table: Table, filter: tuple[str,  Any] = None, convert_d
     else:
         query = table.select_row()
     
-    with database:
+    with table.get_database() as database:
         cursor = database.cursor()
         cursor.execute(query)
 
@@ -229,7 +224,7 @@ def fetchall_from_table(table, filter: tuple[str, Any] = None, convert_data=True
     else:
         query = table.select_row()
 
-    with database:
+    with table.get_database() as database:
         cursor = database.cursor()
         cursor.execute(query)
         batch = cursor.fetchall()

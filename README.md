@@ -17,9 +17,7 @@ Class MyTable:
             ...
         }
 
-easySQL.intergrate(pathlib.Path('test.sqlite'))
-
 my_table = MyTable()
-
 easySQL.create_table(my_table, drop=False)
+
 ```
