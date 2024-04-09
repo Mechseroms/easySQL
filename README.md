@@ -35,4 +35,3 @@ print(my_table)
 easySQL.create_table(my_table, drop=True)
 
 ```
-*
