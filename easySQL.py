@@ -129,7 +129,7 @@ def Table(cls):
                 return middle_string
             return f"UPDATE {self.name} SET{manufactur_update_SQL_string(data)} WHERE id = {id}"
 
-        def convert_data(self, rows: list or tuple):
+        def convert_data(self, rows: list | tuple):
             """ Takes rows returned by the tables SQL_select string and returns them as namedtuples.
 
             Args:
@@ -198,7 +198,7 @@ def insert_into_table(table, data):
         cursor = database.cursor()
         cursor.execute(query.query, query.data)
     
-def fetchone_from_table(table: Table, filter: tuple([str, Any]) = None, convert_data=True) -> tuple:
+def fetchone_from_table(table: Table, filter: tuple[str,  Any] = None, convert_data=True) -> tuple:
     if filter:
         query = table.select_row(column=filter[0], match=filter[1])
     else:
@@ -214,7 +214,7 @@ def fetchone_from_table(table: Table, filter: tuple([str, Any]) = None, convert_
         return table.convert_data(cursor.fetchone())
         
     
-def fetchall_from_table(table, filter: tuple([str, Any]) = None, convert_data=True) -> list:
+def fetchall_from_table(table, filter: tuple[str, Any] = None, convert_data=True) -> list:
     """ Fetches all rows from the database using passed query
 
     Args:
