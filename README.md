@@ -9,10 +9,10 @@ EasySQL relies on the use of the `@easySQL.Table` decorator with the argument; `
 The value types can be one or a combo of the following types. These can be combined with the "+" operator or the "and" operator:
 
 * `easySQL.STRING`: a basic string.
--`easySQL.INTEGER`: a basic integer.
--`easySQL.UNIQUE`: causes the value to have to be enforced to a unique entry in the database table.
--`easySQL.PRIMARY_KEY`: causes the value to be the primary key in the database table.
--`easySQL.JSON`: serializes a list or dictionary into a string to be inserted and selected from the database table.
+* `easySQL.INTEGER`: a basic integer.
+* `easySQL.UNIQUE`: causes the value to have to be enforced to a unique entry in the database table.
+* `easySQL.PRIMARY_KEY`: causes the value to be the primary key in the database table.
+* `easySQL.JSON`: serializes a list or dictionary into a string to be inserted and selected from the database table.
 
 Below is an example of easySQL at its current state:
 
