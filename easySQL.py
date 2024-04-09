@@ -2,15 +2,23 @@ from typing import Any
 import sqlite3, pathlib
 from collections import namedtuple
 
-STRING = 'string'
-INTEGER = 'integer'
-UNIQUE = 'UNIQUE'
-JSON = 'string' # TODO: create a function for converting lists and dict into json string and back
+STRING = 'string '
+INTEGER = 'integer '
+UNIQUE = 'UNIQUE '
+PRIMARY_KEY = 'PRIMARY KEY '
+JSON = 'string ' # TODO: create a function for converting lists and dict into json string and back
 
 def VALDATED_STRING():
     return 'string'
 
-def Table(path_to_database: pathlib.Path | str):
+class ImproperPath(Exception):
+    def __init__(self, path_to_database):
+
+        self.message = f"{type(path_to_database)}: {path_to_database}; path to database must be a pathlib.Path object or a str pointing to the database path..."
+        super().__init__(self.message)
+
+
+def Table(*, path_to_database: pathlib.Path | str):
     """ easySQL decorator for table classes for easy instantiation of many of the SQL_execute strings.
 
     This class will always need these variables defined within its __init__ method;
@@ -26,6 +34,8 @@ def Table(path_to_database: pathlib.Path | str):
     Returns:
         Table: returns a Table class wrapped around the original class.
     """
+    if isinstance(path_to_database, (pathlib.Path, str)) is False: raise ImproperPath(path_to_database)
+    
     def wrapper(cls):
         class Table(cls):
             def __init__(self, *args, **kwargs) -> None:
@@ -53,7 +63,7 @@ def Table(path_to_database: pathlib.Path | str):
                         str: middle of create table SQL_execute string.
                     """
                     # TODO: very crude way of doing it, research a better way.
-                    middle_string = 'id integer PRIMARY KEY, '
+                    middle_string = ''
                     current_count = 0
                     for column_name, column_type in self.columns.items():
                         if current_count == len(self.columns.items())-1:
@@ -62,6 +72,7 @@ def Table(path_to_database: pathlib.Path | str):
                             middle_string += f"{column_name} {column_type}, "
                         current_count += 1
                     return middle_string
+                
                 return f"CREATE TABLE {self.name} ({manufacture_create_SQL_string()});"    
             
             @property
@@ -143,7 +154,7 @@ def Table(path_to_database: pathlib.Path | str):
         return Table
     return wrapper
 
-def basic_query(query: str):
+def basic_query(table, query: str):
     """ Used as single query functions, ex. creating tables, dropping tables, updating rows
 
     Args:
