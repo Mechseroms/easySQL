@@ -1,19 +1,34 @@
 from typing import Any
 import sqlite3, pathlib
 from collections import namedtuple
+from dataclasses import dataclass
 
-STRING = 'string '
-INTEGER = 'integer '
-UNIQUE = 'UNIQUE '
-PRIMARY_KEY = 'PRIMARY KEY '
+@dataclass
+class TypeComplex:
+    """ Creates a SQL string based on its set parameters for ease of use.
+    type arg: can be 'string', 'integer', 'bool', 'real', 'blob'
+    """
+    type: str # can be string, integer, bool, real, blob
+    isPrimaryKey: bool = False
+    isUnique: bool = False
+    isAutoIncremental: bool = False
+
+    def normalize(self):
+        string = f"{self.type} {'UNIQUE ' if self.isUnique else ''}{'PRIMARY KEY ' if self.isPrimaryKey else ''}{'AUTOINCREMENT' if self.isAutoIncremental else ''}"
+        return string.strip()
+
+
+STRING = TypeComplex(type='string')
+INTEGER = TypeComplex(type='integer')
+BASIC_PRIMARY_KEY = TypeComplex(type='integer', isPrimaryKey=True, isAutoIncremental=True)
 JSON = 'string ' # TODO: create a function for converting lists and dict into json string and back
+
 
 def VALDATED_STRING():
     return 'string'
 
 class ImproperPath(Exception):
     def __init__(self, path_to_database):
-
         self.message = f"{type(path_to_database)}: {path_to_database}; path to database must be a pathlib.Path object or a str pointing to the database path..."
         super().__init__(self.message)
 
@@ -28,8 +43,8 @@ def Table(*, path_to_database: pathlib.Path | str):
         types for a column are:
             - STRING
             - INTEGER
-            - UNIQuE
             - JSON
+            - TypeComplex
 
     Returns:
         Table: returns a Table class wrapped around the original class.
@@ -42,11 +57,13 @@ def Table(*, path_to_database: pathlib.Path | str):
                 super(Table, self).__init__(*args, **kwargs)
                 self.path_to_database = path_to_database
                 self.data_object = namedtuple(f"{self.name}_row", list(self.columns.keys()))
-                self.columns_validation = len(self.columns)
+                self.columns_validation = len([column for column, type in self.columns.items() if not type.isPrimaryKey])
+                print(self.columns_validation)
+                create_table(self, drop=False)
 
             def __repr__(self):
                 return f"{self.__class__.__name__} ('{self.name}'@'{self.path_to_database}')"
-            
+
             def get_database(self):
                 """ Returns the database specific to this table."""
                 if isinstance(path_to_database, pathlib.Path):
@@ -67,9 +84,9 @@ def Table(*, path_to_database: pathlib.Path | str):
                     current_count = 0
                     for column_name, column_type in self.columns.items():
                         if current_count == len(self.columns.items())-1:
-                            middle_string += f"{column_name} {column_type}"
+                            middle_string += f"{column_name} {column_type.normalize()}"
                         else:
-                            middle_string += f"{column_name} {column_type}, "
+                            middle_string += f"{column_name} {column_type.normalize()}, "
                         current_count += 1
                     return middle_string
                 
@@ -85,20 +102,21 @@ def Table(*, path_to_database: pathlib.Path | str):
                 else:
                     return f"SELECT * FROM {self.name}"
             
-            def insert_row(self, data) -> namedtuple:
+            def insert_row(self, data):
                 
                 def manufacture_insert_SQL_String():
                     middle_string = '('
                     gavel_string = '('
                     current_count = 0
-                    for column_name in self.columns.keys():
-                        if current_count == len(self.columns.items())-1:
-                            middle_string += f"{column_name})"
-                            gavel_string += f"?)"
-                        else:
-                            middle_string += f"{column_name}, "
-                            gavel_string += f"?, "
-                        current_count += 1
+                    for column_name, type in self.columns.items():
+                        if not type.isPrimaryKey:
+                            if current_count == self.columns_validation-1:
+                                middle_string += f"{column_name})"
+                                gavel_string += f"?)"
+                            else:
+                                middle_string += f"{column_name}, "
+                                gavel_string += f"?, "
+                            current_count += 1
                     return f"{middle_string} VALUES {gavel_string}"
                 
                 query = namedtuple('Query', ['query', 'data'])
@@ -173,8 +191,8 @@ def create_table(table: Table, drop=False):
         with table.get_database() as database:
             cursor = database.cursor()            
             cursor.execute(table.create_table)
-    except sqlite3.OperationalError:
-        pass
+    except sqlite3.OperationalError as e:
+        print(e)
     
 def drop_table(table: Table):
     try:
@@ -199,6 +217,7 @@ def insert_into_table(table, data):
         query (namedtuple): (query.query = SQL_execute string, query.data = tuple of column's data)
     """
     query = table.insert_row(data)
+    print(query)
     assert query.query, query.data
     with table.get_database() as database:
         cursor = database.cursor()
