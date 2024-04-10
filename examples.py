@@ -13,7 +13,3 @@ class MyTable:
         }
 
 my_table = MyTable()
-print([column.normalize() for column in my_table.columns.values()])
-
-
-easySQL.insert_into_table(my_table, ("world", 1))
