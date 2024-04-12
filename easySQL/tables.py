@@ -3,7 +3,7 @@ import sqlite3, pathlib
 from collections import namedtuple
 from .exceptions import ImproperPath
 
-def Table(*, initCreate: bool = True, drop_on_create=False):
+def Table(initCreate: bool = True, drop_on_create=False):
     """ easySQL decorator for table classes for easy instantiation of many of the SQL_execute strings.
 
     This class will always need these variables defined within its __init__ method;
@@ -25,6 +25,7 @@ def Table(*, initCreate: bool = True, drop_on_create=False):
             def __init__(self, *args, **kwargs) -> None:
                 self.name = cls.name
                 self.columns = cls.columns
+                self.parsed_non_auto_columns = {k: v for k, v in self.columns.items() if not v.isAutoIncremental}
                 # super(Table, self).__init__(*args, **kwargs)
                 self.path_to_database = cls.path_to_database
                 self.data_object = namedtuple(f"{self.name}_row", list(self.columns.keys()))
@@ -106,7 +107,11 @@ def Table(*, initCreate: bool = True, drop_on_create=False):
             def insert_row(self, data: tuple):
                 query = namedtuple('Query', ['query', 'data'])
                 if len(data) == self.columns_validation:
-                    query = query(query=f"INSERT INTO {self.name}{self._insert_sql}", data=tuple(data)
+                    query = query(query=f"INSERT INTO {self.name}{self._insert_sql}", 
+                                  data=tuple([column_type.validate_and_transform(data[i]) 
+                                              for i, column_type in enumerate(self.parsed_non_auto_columns.values())
+                                              ])
+                                              )
                 else:
                     query = query(query=False, data= f"passed data to {self.name} is not the right length of entries")
 
