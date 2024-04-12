@@ -19,18 +19,19 @@ Below is an example of easySQL at its current state:
 ```python
 import easySQL
 
-@easySQL.Table(path_to_database="test.sqlite")
-class MyTable:
-    """ A example table using easySQL and its TypeComplexes;
+@easySQL.tables.Table(initCreate=True, drop_on_create=True)
+class FoodsTable:
+    """ A example table using easySQL and its TypeComplex;
     """
-    def __init__(self) -> None:
-        self.name = "foo"
-        self.columns = {
-            "id": easySQL.BASIC_PRIMARY_KEY,
-            "foo": easySQL.TypeComplex('string', isUnique=True),
-            "duh": easySQL.INTEGER
+    path_to_database = "test.sqlite"
+    name: str = "Foods"
+    columns: dict[str, easySQL.types.TypeComplex] = {
+            "id": easySQL.types.BASIC_PRIMARY_KEY,
+            "name": easySQL.types.TypeComplex('string', isUnique=True),
+            "qty": easySQL.types.INTEGER,
+            "type": easySQL.types.STRING
         }
 
-my_table = MyTable()
+foods_table = FoodsTable()
 
 ```

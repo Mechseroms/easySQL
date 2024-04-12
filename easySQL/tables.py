@@ -106,7 +106,7 @@ def Table(*, initCreate: bool = True, drop_on_create=False):
             def insert_row(self, data: tuple):
                 query = namedtuple('Query', ['query', 'data'])
                 if len(data) == self.columns_validation:
-                    query = query(query=f"INSERT INTO {self.name}{self._insert_sql}", data=data)
+                    query = query(query=f"INSERT INTO {self.name}{self._insert_sql}", data=tuple(data)
                 else:
                     query = query(query=False, data= f"passed data to {self.name} is not the right length of entries")
 
