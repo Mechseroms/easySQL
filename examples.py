@@ -3,7 +3,7 @@ import easySQL.tables
 import easySQL.types, easySQL.exceptions
 
 
-@easySQL.tables.Table()
+@easySQL.tables.Table
 class FoodsTable:
     """ A example table using easySQL and its TypeComplex;
     """
