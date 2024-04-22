@@ -10,6 +10,7 @@ EasySQL relies on the use of the `@easySQL.tables.Table` decorator with the argu
 * `easySQL.types.INTEGER`: a basic integer.
 * `easySQL.types.ID`: causes the value to be the primary key in the database table.
 * `easySQL.types.JSON`: serializes a list or dictionary into a string to be inserted and selected from the database table.
+* `easySQL.types.CHOICE: a defauly choice column that validates data to be 'yes' or 'no'
 
 Below is an example of easySQL at its current state at its bare minimum:
 
@@ -27,7 +28,8 @@ class FoodsTable:
             "name": easySQL.types.TypeComplex('string', isUnique=True),
             "qty": easySQL.types.INTEGER,
             "type": easySQL.types.STRING,
-            "json": easySQL.types.JSON
+            "json": easySQL.types.JSON,
+            "completed": easySQL.types.CHOICE
         }
 
 ```

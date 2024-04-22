@@ -23,21 +23,31 @@ class TypeComplex:
         else:
             print(self, data)
             raise ValidationFailed
-
-    def transform(self, data):
+    
+    def pack(self,data):
+        return data
+    
+    def unpack(self, data):
         return data
 
-    def validate_and_transform(self, data):
-        if self.validate(data): return self.transform(data)
+    def validate_and_pack(self, data):
+        if self.validate(data): return self.pack(data)
+
                  
 class JSONTypeComplex(TypeComplex):
-    def transform(self, data: list | dict | str):
+    def pack(self, data: list | dict | str):
         return json.dumps(data)
+    
+    def unpack(self, data: str):
+        return json.loads(data)
 
 class ChoiceComplex(TypeComplex):
+    def __init__(self, type, choices=['yes', 'no']):
+        super().__init__(type=type)
+        self.choices = choices
+
     def validate(self, data):
-        choices = ['In', 'Out']
-        if data in choices:
+        if data in self.choices:
             return True
         else:
             raise ValidationFailed
