@@ -4,15 +4,18 @@ An easy sqlite3 interface for basic functioning where data fetched is returned a
 I really made this as I had found that I liked to interface with SQlite databases for my small amounts of data for readablity. Well this forced me to rewrite alot of code over and over, so after starting to learn about decorators I set out to develop an easy to use interface that takes writing SQL code that i found tedious into simple functions. This made developing a table as easy as instatiating a decorated class.
 
 ## Usage
-EasySQL relies on the use of the `@easySQL.tables.Table` decorator with the argument; `path_to_database`. You create a class that instantiates with the variables `self.name` a string identifying the table and `self.columns` a dictionary of key value pairs in the format of column_name: value_type.
+EasySQL relies on the use of the `@easySQL.tables.Table` decorator. You create a class that instantiates with the variables `path_to_database`, `name` a string identifying the table and `columns` a dictionary of key value pairs in the format of column_name: value_type.
 
 * `easySQL.types.STRING`: a basic string.
 * `easySQL.types.INTEGER`: a basic integer.
 * `easySQL.types.ID`: causes the value to be the primary key in the database table.
 * `easySQL.types.JSON`: serializes a list or dictionary into a string to be inserted and selected from the database table.
-* `easySQL.types.CHOICE: a defauly choice column that validates data to be 'yes' or 'no'
+* `easySQL.types.CHOICE: a default choice column that validates data to be 'yes' or 'no'
 
 Below is an example of easySQL at its current state at its bare minimum:
+
+### Creating a Table
+You create a table by decorating a class with the SQLiteTable decorator. Within this class you must have the variables `path_to_database`, `name`, and `columns` defined for the table. From there just instantiate the class into a variable as you see fit.
 
 ```python
 from easySQL.types import ID, STRING
@@ -29,6 +32,7 @@ class MyTable:
 
 my_table = MyTable()
 ```
+
 ### Inserting data into a table
 Inserting data into a table, data is inserted into tables as a tuple of all the columns data in order.
 single column tables as our table must have a following comma to ensure strings are represented as a single column and
@@ -38,6 +42,7 @@ not split.
 row_data: tuple = ("Apple",)
 my_table.insert_row(row_data)
 ```
+
 ### Fetching data from a table. 
 You can pass the convert_data = False argument to fetch in order to stop the table
 from converting the rows into the tables data_object in the form of a named tuple. 
@@ -67,11 +72,14 @@ print(rows) # -> [test_row(id=1, name='Apple'), test_row(id=2, name='Apple'), te
 
 print(rows[1].name) # -> "Apple"
 ```
+
 ## TypeComplexes
 The backend of easySQL is its types and what I have called TypeComplexes, dont ask me why I named them that, which holds the tables ability to construct
 all the neccessary SQL strings to interact with the database. I have listed the types included with easySQL above, but to create your own you simply can do so by importing the TypeComplex and initiating or subclassing your own. From there you can overwrite any of its methods; pack, unpack, validate.
 
 Here is my basic implementation of json and TypeComplexes in a few different ways.
+
+Instantiation:
 ```python
 from easySQL.types import TypeComplex
 import json
@@ -97,3 +105,20 @@ mycomplex.pack = lambda data: json.dumps(data)
 mycomplex.unpack = lambda data: json.loads(data)
 ```
 
+or with Subclassing:
+```python
+from easySQL.types import TypeComplex
+import json
+
+class JSONComplex(TypeComplex):
+    def pack(data):
+        return json.dumps(data)
+
+    def unpack(data):
+        return json.loads(data)
+    
+    def validate(data):
+        if isinstance(data, [list, dict]):
+            return True
+        return False
+```
