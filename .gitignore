@@ -1,1 +1,5 @@
 test.sqlite
+__pycache__/__init__.cpython-312.pyc
+__pycache__/exceptions.cpython-312.pyc
+__pycache__/tables.cpython-312.pyc
+__pycache__/types.cpython-312.pyc

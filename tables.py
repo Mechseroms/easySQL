@@ -3,7 +3,17 @@ import sqlite3, pathlib
 from collections import namedtuple
 from .exceptions import ImproperPath
 
-def Table(initCreate: bool = True, drop_on_create: bool = False):
+def SQLiteTable(initCreate: bool = True, drop_on_create: bool = False):
+    """Decorates a class to be a table; 3 arguments must be assigned in the Class block:
+    path_to_database, name, columns.
+
+    Args:
+        initCreate (bool, optional): _description_. Defaults to True.
+        drop_on_create (bool, optional): _description_. Defaults to False.
+        path_to_database str:
+        name str: name of the table in the database
+        columns dict[str, TypeComplex]: A dictionary with the keys representing the columns in the database and the value a TypeComplex.
+    """
     def wrapper(cls):
         if isinstance(cls.path_to_database, (pathlib.Path, str)) is False: raise ImproperPath(cls.path_to_database)
         class SQLITETable(cls):
