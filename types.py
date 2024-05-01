@@ -12,6 +12,8 @@ class TypeComplex:
     isPrimaryKey: bool = False
     isUnique: bool = False
     isAutoIncremental: bool = False
+    useDefault: bool = False
+    default: any = None
 
     def normalize(self):
         string = f"{self.type} {'UNIQUE ' if self.isUnique else ''}{'PRIMARY KEY ' if self.isPrimaryKey else ''}{'AUTOINCREMENT' if self.isAutoIncremental else ''}"
@@ -20,8 +22,10 @@ class TypeComplex:
     def validate(self, data):
         if data:
             return True
+        elif self.useDefault:
+            return self.default
         else:
-            print(self, data)
+            print(self, f"-{data}-", type(data))
             raise ValidationFailed
     
     def pack(self,data):
@@ -52,7 +56,7 @@ class ChoiceComplex(TypeComplex):
         else:
             raise ValidationFailed
         
-STRING = TypeComplex(type='string')
+STRING = TypeComplex(type='string', useDefault=True, default='')
 STRING.__doc__ = "This is a basic TypeComplex to create a column in SQL that expects a string type."
 
 INTEGER = TypeComplex(type='integer')
