@@ -1,13 +1,14 @@
 from easySQL.types import ID, STRING
 from easySQL.tables import SQLiteTable
 
-@SQLiteTable()
+@SQLiteTable(drop_on_create=True)
 class MyTable:
     path_to_database = "test.sqlite"
     name = "test"
     columns = {
         "id": ID,
-        "name": STRING
+        "name": STRING,
+        "type": STRING
     }
 
 my_table = MyTable()
@@ -15,7 +16,10 @@ my_table = MyTable()
 # Inserting data into a table, data is inserted into tables as a tuple of all the columns data in order.
 # single column tables as our table must have a following comma to ensure strings are represented as a single column and
 # not split.
-row_data: tuple = ("Apple",)
+row_data: tuple = ("Apple", "Fruit")
+my_table.insert_row(row_data)
+
+row_data: tuple = ("Apple", "Veggie")
 my_table.insert_row(row_data)
 
 # Fetching data from a table. 
