@@ -1,13 +1,14 @@
 from easySQL.types import ID, STRING
 from easySQL.tables import SQLiteTable
 
-@SQLiteTable()
+@SQLiteTable(drop_on_create=True)
 class MyTable:
     path_to_database = "test.sqlite"
     name = "test"
     columns = {
         "id": ID,
-        "name": STRING
+        "name": STRING,
+        "type": STRING
     }
 
 my_table = MyTable()
@@ -15,7 +16,16 @@ my_table = MyTable()
 # Inserting data into a table, data is inserted into tables as a tuple of all the columns data in order.
 # single column tables as our table must have a following comma to ensure strings are represented as a single column and
 # not split.
-row_data: tuple = ("Apple",)
+row_data: tuple = ("Apple", "Fruit")
+my_table.insert_row(row_data)
+
+row_data: tuple = ("Apple", "Veggie")
+my_table.insert_row(row_data)
+
+row_data: tuple = ("Orange", "Fruit")
+my_table.insert_row(row_data)
+
+row_data: tuple = ("Banana", "Fruit")
 my_table.insert_row(row_data)
 
 # Fetching data from a table. 
@@ -27,25 +37,23 @@ my_table.insert_row(row_data)
 
 # You can also pass a filter into fetch to filter by a single column.
 
-
-
 # calling the fetch method will return all rows from the table
 rows = my_table.fetch()
 
 # to fetch many or one you would pass an int of the amount of entries you would like from that table
-rows = my_table.fetch(entries=4)
+rows = my_table.fetch(entries=1)
 
 # using the filter argument; this is passed as a tuple with two values, the column name in the form of a string, and
 # the value you would like returned.
-filter: tuple = ('id', 5)
-rows = my_table.fetch(filter=filter)
+filter: tuple = ('id', 2)
+rows = my_table.fetch(filter=filter, entries=1)
 
-print(rows) # -> [test_row(id=5, name='Apple')]
+print(rows) # -> [test_row(id=2, name='Orange')]
 
 filter: tuple = ('name', 'Apple')
 rows = my_table.fetch(filter=filter)
 
-print(rows) # -> [test_row(id=1, name='Apple'), test_row(id=2, name='Apple'), test_row(id=3, name='Apple')] 
+print(rows) # -> [test_row(id=1, name='Apple')] 
 
 # since rows are returned as namedtuples they are open to property calls.
 
