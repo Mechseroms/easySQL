@@ -132,12 +132,16 @@ def SQLiteTable(initCreate: bool = True, drop_on_create: bool = False):
                         batch = cursor.fetchmany(size=entries)
 
                     if entries == 1:
-                        batch = [cursor.fetchone()]
-                    
+                        item = cursor.fetchone()
+
+                        if item != None:
+                            batch = [item]
+                        else:
+                            batch = []
+
                     if entries == 0:
                         batch = cursor.fetchall()
                     
-
                     batch = self.unpack_data(rows=batch)
                     # TODO:: this is where we need to actually column_type.unpack the data by types
                     if not convert_data:

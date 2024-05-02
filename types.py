@@ -25,7 +25,7 @@ class TypeComplex:
         elif self.useDefault:
             return self.default
         else:
-            print(self, f"-{data}-", type(data))
+            print(data)
             raise ValidationFailed
     
     def pack(self,data):
@@ -36,8 +36,7 @@ class TypeComplex:
 
     def validate_and_pack(self, data):
         if self.validate(data): return self.pack(data)
-
-                 
+      
 class JSONTypeComplex(TypeComplex):
     def pack(self, data: list | dict | str):
         return json.dumps(data)
@@ -46,20 +45,21 @@ class JSONTypeComplex(TypeComplex):
         return json.loads(data)
 
 class ChoiceComplex(TypeComplex):
-    def __init__(self, type, choices=['yes', 'no']):
-        super().__init__(type=type)
+    def __init__(self, type, choices=['yes', 'no'], useDefault=False, default=None):
+        super().__init__(type=type, useDefault=useDefault, default=default)
         self.choices = choices
 
     def validate(self, data):
         if data in self.choices:
             return True
         else:
+            print(data)
             raise ValidationFailed
         
 STRING = TypeComplex(type='string', useDefault=True, default='')
 STRING.__doc__ = "This is a basic TypeComplex to create a column in SQL that expects a string type."
 
-INTEGER = TypeComplex(type='integer')
+INTEGER = TypeComplex(type='integer', useDefault=True, default=0)
 INTEGER.__doc__ = "This is a basic TypeComplex to Create a column in SQL that expects a integer type."
 
 def validate(data):
@@ -73,6 +73,6 @@ INTEGER.validate = validate
 ID = TypeComplex(type='integer', isPrimaryKey=True, isAutoIncremental=True)
 ID.__doc__ = "This TypeComplex creates an Auto Incrementing Primary Key Integer often refered to as ID in many tables."
 
-JSON = JSONTypeComplex(type='string') # TODO: create a function for converting lists and dict into json string and back
+JSON = JSONTypeComplex(type='string', useDefault=True, default='') # TODO: create a function for converting lists and dict into json string and back
 
-CHOICE = ChoiceComplex(type="string")
+CHOICE = ChoiceComplex(type="string", useDefault=True, default='')
