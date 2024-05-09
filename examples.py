@@ -1,6 +1,10 @@
 from easySQL.types import ID, STRING
 from easySQL.tables import SQLiteTable
 
+# TODO: Need to add a row_count method to Table that returns a total count from the table
+# TODO: Need to add a raw_query method to be able to pass a custom query and return all rows
+#       Fetch statement essentially but with a SQL string passed in.
+
 @SQLiteTable(drop_on_create=True)
 class MyTable:
     path_to_database = "test.sqlite"
