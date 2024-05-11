@@ -168,6 +168,12 @@ def SQLiteTable(initCreate: bool = True, drop_on_create: bool = False):
                     new_rows.append([column_type.unpack(row[i]) for i, column_type in enumerate(self.columns.values())])
                 return new_rows
 
+            def pack_data(self, data):
+                new_data = {}
+                for key, value in data.items():
+                    new_data[key] = self.columns[key].pack(value)
+                return new_data
+
             def convert_data(self, rows: list) -> Any:
                 """ Takes rows returned by the tables SQL_select string and returns them as namedtuples.
 
@@ -182,7 +188,9 @@ def SQLiteTable(initCreate: bool = True, drop_on_create: bool = False):
             
     
             def update_table_row_by_id(self, id: int, data: dict):
+                data = self.pack_data(data)
                 query = self._update_SQL(data=data, id=id)
+                print(query)
                 with self.connect() as database:
                     cursor = database.cursor()       
                     cursor.execute(query)
