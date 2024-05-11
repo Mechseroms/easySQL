@@ -29,14 +29,59 @@ class TypeComplex:
             raise ValidationFailed
     
     def pack(self,data):
+        """ packs the data for insertion into database """
         return data
     
     def unpack(self, data):
+        """ unpacks the data for fetching from database """
         return data
 
     def validate_and_pack(self, data):
         if self.validate(data): return self.pack(data)
-      
+
+class DictionaryComplex(TypeComplex):
+    def unpack(self, data: str) -> dict:
+        tag = "\\j*s*o*n\\"
+        data = data.replace(tag, "")
+        data: dict = json.loads(data)
+        print(data)
+        return data
+    
+    def pack(self, data: dict) -> str:
+        tag = "\\j*s*o*n\\"
+        data: str = json.dumps(data)
+        data = data + tag
+        print(data)
+        return data
+    
+    def validate(self, data):
+        if isinstance(data, dict):
+            return True
+        else:
+            raise ValidationFailed
+
+class ListComplex(TypeComplex):
+    def unpack(self, data: str) -> dict:
+        tag = "\\j*s*o*n\\"
+        data = data.replace(tag, "")
+        data: dict = json.loads(data)
+        print(data)
+        return data
+    
+    def pack(self, data: dict) -> str:
+        tag = "\\j*s*o*n\\"
+        data: str = json.dumps(data)
+        data = data + tag
+        print(data)
+        return data
+    
+    def validate(self, data):
+        if isinstance(data, list):
+            return True
+        else:
+            raise ValidationFailed
+
+
 class JSONTypeComplex(TypeComplex):
     def pack(self, data: list | dict | str):
         return json.dumps(data)
@@ -76,3 +121,6 @@ ID.__doc__ = "This TypeComplex creates an Auto Incrementing Primary Key Integer 
 JSON = JSONTypeComplex(type='string', useDefault=True, default='') # TODO: create a function for converting lists and dict into json string and back
 
 CHOICE = ChoiceComplex(type="string", useDefault=True, default='')
+
+DICTIONARY = DictionaryComplex(type="string")
+LIST = ListComplex(type="string")
