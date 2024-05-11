@@ -44,14 +44,12 @@ class DictionaryComplex(TypeComplex):
         tag = "\\j*s*o*n\\"
         data = data.replace(tag, "")
         data: dict = json.loads(data)
-        print(data)
         return data
     
     def pack(self, data: dict) -> str:
         tag = "\\j*s*o*n\\"
         data: str = json.dumps(data)
         data = data + tag
-        print(data)
         return data
     
     def validate(self, data):
@@ -65,14 +63,12 @@ class ListComplex(TypeComplex):
         tag = "\\j*s*o*n\\"
         data = data.replace(tag, "")
         data: dict = json.loads(data)
-        print(data)
         return data
     
     def pack(self, data: dict) -> str:
         tag = "\\j*s*o*n\\"
         data: str = json.dumps(data)
         data = data + tag
-        print(data)
         return data
     
     def validate(self, data):
