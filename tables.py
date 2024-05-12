@@ -190,7 +190,6 @@ def SQLiteTable(initCreate: bool = True, drop_on_create: bool = False):
             def update_table_row_by_id(self, id: int, data: dict):
                 data = self.pack_data(data)
                 query = self._update_SQL(data=data, id=id)
-                print(query)
                 with self.connect() as database:
                     cursor = database.cursor()       
                     cursor.execute(query)
