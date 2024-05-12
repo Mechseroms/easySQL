@@ -94,7 +94,6 @@ class ChoiceComplex(TypeComplex):
         if data in self.choices:
             return True
         else:
-            print(data)
             raise ValidationFailed
         
 STRING = TypeComplex(type='string', useDefault=True, default='')
