@@ -1,14 +1,16 @@
-from easySQL.types import ID, STRING
-from easySQL.tables import SQLiteTable
+from . import types, tables
+import pathlib
 
-@SQLiteTable(drop_on_create=True)
+@tables.SQLiteTable(drop_on_create=True)
 class MyTable:
     path_to_database = "test.sqlite"
     name = "test"
     columns = {
-        "id": ID,
-        "name": STRING,
-        "type": STRING
+        "id": types.ID,
+        "name": types.STRING,
+        "type": types.STRING,
+        "list": types.LIST,
+        "dict": types.DICTIONARY
     }
 
 my_table = MyTable()
@@ -16,16 +18,16 @@ my_table = MyTable()
 # Inserting data into a table, data is inserted into tables as a tuple of all the columns data in order.
 # single column tables as our table must have a following comma to ensure strings are represented as a single column and
 # not split.
-row_data: tuple = ("Apple", "Fruit")
+row_data: tuple = ("Apple", "Fruit", [], {})
 my_table.insert_row(row_data)
 
-row_data: tuple = ("Apple", "Veggie")
+row_data: tuple = ("Banana", "Fruit", [], {})
 my_table.insert_row(row_data)
 
-row_data: tuple = ("Orange", "Fruit")
+row_data: tuple = ("Orange", "Fruit", [], {})
 my_table.insert_row(row_data)
 
-row_data: tuple = ("Banana", "Fruit")
+row_data: tuple = ("Dragonfruit", "Fruit", [], {})
 my_table.insert_row(row_data)
 
 # Fetching data from a table. 
@@ -58,3 +60,5 @@ print(rows) # -> [test_row(id=1, name='Apple')]
 # since rows are returned as namedtuples they are open to property calls.
 
 print(rows[1].name) # -> "Apple"
+
+my_table.export_csv(pathlib.Path("export.csv"))
