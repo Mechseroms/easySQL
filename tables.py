@@ -1,5 +1,5 @@
 from typing import Any
-import sqlite3, pathlib
+import sqlite3, pathlib, csv
 from collections import namedtuple
 from .exceptions import ImproperPath
 
@@ -204,7 +204,16 @@ def SQLiteTable(initCreate: bool = True, drop_on_create: bool = False):
                 with self.connect() as database:
                     cursor = database.cursor()       
                     cursor.execute(query)
-        
+            
+            def export_csv(self, filepath: pathlib.Path):
+                rows = self.fetch(convert_data=False)
+                print(rows)
+                with filepath.open('w', newline='') as csvfile:
+                    csvwriter = csv.writer(csvfile)
+                    csvwriter.writerow(self.columns.keys())
+                    csvwriter.writerows(rows)
+                    
+
         
         
         return SQLITETable
