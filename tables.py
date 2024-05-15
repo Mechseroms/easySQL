@@ -69,6 +69,16 @@ def SQLiteTable(initCreate: bool = True, drop_on_create: bool = False):
                     return f"SELECT * FROM {self.name} WHERE {column}= '{match}'"
                 else:
                     return f"SELECT * FROM {self.name}"
+            
+            def validate(self, value):
+                if isinstance(value, str):
+                    value = value.replace("'", "**&**")
+                return value
+            
+            def devalidate(self, value):
+                if isinstance(value, str):
+                    value = value.replace("**&**", "'")
+                return value
 
             def _update_SQL(self, data: dict, id: str) -> str:
                 """ Update a row at {id} with {data}.
@@ -87,13 +97,13 @@ def SQLiteTable(initCreate: bool = True, drop_on_create: bool = False):
                         _type_: middle segment of SQL_execute string
                     """
                     # TODO: this is a very crude implementtion
-                    middle_string = ''
+                    middle_string = ""
                     current_count = 0
                     for key, value in data.items():
                         if current_count == len(data.items())-1:
-                            middle_string += f" {key} = '{value}'"
+                            middle_string += f" {key} = '{self.validate(value)}'"
                         else:
-                            middle_string += f" {key} = '{value}', "
+                            middle_string += f" {key} = '{self.validate(value)}', "
                         current_count += 1
                     return middle_string
                 return f"UPDATE {self.name} SET{manufactur_update_SQL_string(data)} WHERE id = {id}"
@@ -152,7 +162,7 @@ def SQLiteTable(initCreate: bool = True, drop_on_create: bool = False):
             def insert_row(self, data: tuple):
                 query = namedtuple('Query', ['query', 'data'])
                 if len(data) == self.columns_validation:
-                    packed_data = [column_type.validate_and_pack(data[i]) for i, column_type in enumerate(self.parsed_non_auto_columns.values())]
+                    packed_data = [self.validate(column_type.validate_and_pack(data[i])) for i, column_type in enumerate(self.parsed_non_auto_columns.values())]
                     query = query(query=f"INSERT INTO {self.name}{self._insert_sql}", data=tuple(packed_data))
                 else:
                     query = query(query=False, data= f"passed data to {self.name} is not the right length of entries")
@@ -165,7 +175,7 @@ def SQLiteTable(initCreate: bool = True, drop_on_create: bool = False):
             def unpack_data(self, rows):
                 new_rows = []
                 for row in rows:
-                    new_rows.append([column_type.unpack(row[i]) for i, column_type in enumerate(self.columns.values())])
+                    new_rows.append([column_type.unpack(self.devalidate(row[i])) for i, column_type in enumerate(self.columns.values())])
                 return new_rows
 
             def pack_data(self, data):
@@ -190,9 +200,11 @@ def SQLiteTable(initCreate: bool = True, drop_on_create: bool = False):
             def update_table_row_by_id(self, id: int, data: dict):
                 data = self.pack_data(data)
                 query = self._update_SQL(data=data, id=id)
+                print(query)
                 with self.connect() as database:
                     cursor = database.cursor()       
                     cursor.execute(query)
+        
         
         
         return SQLITETable
