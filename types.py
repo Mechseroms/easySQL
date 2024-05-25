@@ -50,7 +50,7 @@ class DictionaryComplex(TypeComplex):
         tag = "\\j*s*o*n\\"
         data: str = json.dumps(data)
         data = data + tag
-        return data
+        return data.replace('"', '\"')
     
     def validate(self, data):
         if isinstance(data, dict):
@@ -69,7 +69,7 @@ class ListComplex(TypeComplex):
         tag = "\\j*s*o*n\\"
         data: str = json.dumps(data)
         data = data + tag
-        return data
+        return data.replace('"', '\"')
     
     def validate(self, data):
         if isinstance(data, list):

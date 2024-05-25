@@ -1,5 +1,5 @@
 from typing import Any
-import sqlite3, pathlib
+import sqlite3, pathlib, csv
 from collections import namedtuple
 from .exceptions import ImproperPath
 
@@ -63,12 +63,31 @@ def SQLiteTable(initCreate: bool = True, drop_on_create: bool = False):
                     )
                     
                 return f"({column_denotation}) VALUES ({values_denotaion})"
+            
+            def _delete_sql(self, column: str) -> str:
+                return f"DELETE FROM {self.name} WHERE {column} = ?"
 
             def _select_sql(self, column: str = None, match = None) -> str:
                 if column:
                     return f"SELECT * FROM {self.name} WHERE {column}= '{match}'"
                 else:
                     return f"SELECT * FROM {self.name}"
+            
+            def get_total_rows(self):
+                with self.connect() as database:
+                    cursor = database.cursor()
+                    cursor.execute(f"SELECT Count(*) FROM {self.name}")
+                    return cursor.fetchall()[0][0]
+                
+            def validate(self, value):
+                if isinstance(value, str):
+                    value = value.replace("'", "**&**")
+                return value
+            
+            def devalidate(self, value):
+                if isinstance(value, str):
+                    value = value.replace("**&**", "'")
+                return value
 
             def _update_SQL(self, data: dict, id: str) -> str:
                 """ Update a row at {id} with {data}.
@@ -91,9 +110,9 @@ def SQLiteTable(initCreate: bool = True, drop_on_create: bool = False):
                     current_count = 0
                     for key, value in data.items():
                         if current_count == len(data.items())-1:
-                            middle_string += f" {key} = '{value}'"
+                            middle_string += f" {key} = '{self.validate(value)}'"
                         else:
-                            middle_string += f" {key} = '{value}', "
+                            middle_string += f" {key} = '{self.validate(value)}', "
                         current_count += 1
                     return middle_string
                 return f"UPDATE {self.name} SET{manufactur_update_SQL_string(data)} WHERE id = {id}"
@@ -195,7 +214,6 @@ def SQLiteTable(initCreate: bool = True, drop_on_create: bool = False):
                 """
                 self.keys = list(self.columns.keys())
                 return [self.data_object(**{key: data[i] for i, key in enumerate(self.keys)}) for data in rows]
-            
     
             def update_table_row_by_id(self, id: int, data: dict):
                 data = self.pack_data(data)
@@ -204,7 +222,26 @@ def SQLiteTable(initCreate: bool = True, drop_on_create: bool = False):
                 with self.connect() as database:
                     cursor = database.cursor()       
                     cursor.execute(query)
-        
+            
+            def delete(self, column: str, matches: any):
+
+                if isinstance(matches, dict):
+                    raise ValueError
+                
+                if not isinstance(matches, (list, tuple)):
+                    matches = [matches]
+                
+                with self.connect() as database:
+                    cursor = database.cursor()
+                    cursor.executemany(self._delete_sql(column=column), [(match, ) for match in matches])
+
+            def export_csv(self, filepath: pathlib.Path):
+                rows = self.fetch(convert_data=False)
+                print(rows)
+                with filepath.open('w', newline='') as csvfile:
+                    csvwriter = csv.writer(csvfile)
+                    csvwriter.writerow(self.columns.keys())
+                    csvwriter.writerows(rows)
         
         return SQLITETable
     return wrapper
