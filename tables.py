@@ -64,9 +64,8 @@ def SQLiteTable(initCreate: bool = True, drop_on_create: bool = False):
                     
                 return f"({column_denotation}) VALUES ({values_denotaion})"
             
-            @property
-            def _delete_sql_id(self):
-                return f"DELETE FROM {self.name} WHERE id = '?'"
+            def _delete_sql(self, column: str) -> str:
+                return f"DELETE FROM {self.name} WHERE {column} = ?"
 
             def _select_sql(self, column: str = None, match = None) -> str:
                 if column:
@@ -74,6 +73,12 @@ def SQLiteTable(initCreate: bool = True, drop_on_create: bool = False):
                 else:
                     return f"SELECT * FROM {self.name}"
             
+            def get_total_rows(self):
+                with self.connect() as database:
+                    cursor = database.cursor()
+                    cursor.execute(f"SELECT Count(*) FROM {self.name}")
+                    return cursor.fetchall()[0][0]
+                
             def validate(self, value):
                 if isinstance(value, str):
                     value = value.replace("'", "**&**")
@@ -208,10 +213,17 @@ def SQLiteTable(initCreate: bool = True, drop_on_create: bool = False):
                     cursor = database.cursor()       
                     cursor.execute(query)
             
-            def delete_table_row_by_id(self, id: int):
+            def delete(self, column: str, matches: any):
+
+                if isinstance(matches, dict):
+                    raise ValueError
+                
+                if not isinstance(matches, (list, tuple)):
+                    matches = [matches]
+                
                 with self.connect() as database:
                     cursor = database.cursor()
-                    cursor.execute(self._delete_sql_id, (id, ))
+                    cursor.executemany(self._delete_sql(column=column), [(match, ) for match in matches])
 
             def export_csv(self, filepath: pathlib.Path):
                 rows = self.fetch(convert_data=False)
