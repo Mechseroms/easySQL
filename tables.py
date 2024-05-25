@@ -63,6 +63,10 @@ def SQLiteTable(initCreate: bool = True, drop_on_create: bool = False):
                     )
                     
                 return f"({column_denotation}) VALUES ({values_denotaion})"
+            
+            @property
+            def _delete_sql_id(self):
+                return f"DELETE FROM {self.name} WHERE id = '?'"
 
             def _select_sql(self, column: str = None, match = None) -> str:
                 if column:
@@ -195,7 +199,6 @@ def SQLiteTable(initCreate: bool = True, drop_on_create: bool = False):
                 """
                 self.keys = list(self.columns.keys())
                 return [self.data_object(**{key: data[i] for i, key in enumerate(self.keys)}) for data in rows]
-            
     
             def update_table_row_by_id(self, id: int, data: dict):
                 data = self.pack_data(data)
@@ -205,6 +208,11 @@ def SQLiteTable(initCreate: bool = True, drop_on_create: bool = False):
                     cursor = database.cursor()       
                     cursor.execute(query)
             
+            def delete_table_row_by_id(self, id: int):
+                with self.connect() as database:
+                    cursor = database.cursor()
+                    cursor.execute(self._delete_sql_id, (id, ))
+
             def export_csv(self, filepath: pathlib.Path):
                 rows = self.fetch(convert_data=False)
                 print(rows)
@@ -212,9 +220,6 @@ def SQLiteTable(initCreate: bool = True, drop_on_create: bool = False):
                     csvwriter = csv.writer(csvfile)
                     csvwriter.writerow(self.columns.keys())
                     csvwriter.writerows(rows)
-                    
-
-        
         
         return SQLITETable
     return wrapper
