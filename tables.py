@@ -116,7 +116,17 @@ def SQLiteTable(initCreate: bool = True, drop_on_create: bool = False):
                         current_count += 1
                     return middle_string
                 return f"UPDATE {self.name} SET{manufactur_update_SQL_string(data)} WHERE id = {id}"
-
+            
+            def validate(self, value):
+                if isinstance(value, str):
+                    return value.replace("'", '**&**')
+                return value
+            
+            def devalidate(self, value):
+                if isinstance(value, str):
+                    return value.replace('**&**', "'")
+                return value
+            
             def create_table(self, drop: bool = False) -> None:
                 if drop:
                     self.drop_table()
@@ -190,7 +200,7 @@ def SQLiteTable(initCreate: bool = True, drop_on_create: bool = False):
             def pack_data(self, data):
                 new_data = {}
                 for key, value in data.items():
-                    new_data[key] = self.columns[key].pack(value)
+                    new_data[key] = self.validate(self.columns[key].pack(value))
                 return new_data
 
             def convert_data(self, rows: list) -> Any:

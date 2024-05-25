@@ -62,3 +62,4 @@ print(rows) # -> [test_row(id=1, name='Apple')]
 print(rows[1].name) # -> "Apple"
 
 my_table.export_csv(pathlib.Path("export.csv"))
+
