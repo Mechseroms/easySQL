@@ -234,6 +234,21 @@ def SQLiteTable(initCreate: bool = True, drop_on_create: bool = False):
                     cursor = database.cursor()
                     cursor.executemany(self._delete_sql(column=column), [(match, ) for match in matches])
 
+            def paginate(self, page, limit: int = 10, convert_data: bool = True):
+                with self.connect() as db:
+                    cursor = db.cursor()
+                    offset = (page - 1) * limit
+                    cursor.execute(f"SELECT * FROM {self.name} LIMIT ? OFFSET ?", (limit, offset))
+                    batch = cursor.fetchall()
+
+                    batch = self.unpack_data(rows=batch)
+                    # TODO:: this is where we need to actually column_type.unpack the data by types
+                    if not convert_data:
+                        return batch
+                    
+                    return self.convert_data(batch)
+
+
             def export_csv(self, filepath: pathlib.Path):
                 rows = self.fetch(convert_data=False)
                 print(rows)
