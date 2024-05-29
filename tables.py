@@ -248,7 +248,6 @@ def SQLiteTable(initCreate: bool = True, drop_on_create: bool = False):
                     
                     return self.convert_data(batch)
 
-
             def export_csv(self, filepath: pathlib.Path):
                 rows = self.fetch(convert_data=False)
                 print(rows)
