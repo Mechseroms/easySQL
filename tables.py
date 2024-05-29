@@ -218,7 +218,6 @@ def SQLiteTable(initCreate: bool = True, drop_on_create: bool = False):
             def update_table_row_by_id(self, id: int, data: dict):
                 data = self.pack_data(data)
                 query = self._update_SQL(data=data, id=id)
-                print(query)
                 with self.connect() as database:
                     cursor = database.cursor()       
                     cursor.execute(query)
@@ -238,7 +237,7 @@ def SQLiteTable(initCreate: bool = True, drop_on_create: bool = False):
             def export_csv(self, filepath: pathlib.Path):
                 rows = self.fetch(convert_data=False)
                 print(rows)
-                with filepath.open('w', newline='') as csvfile:
+                with filepath.open('w', newline='', encoding='utf-8') as csvfile:
                     csvwriter = csv.writer(csvfile)
                     csvwriter.writerow(self.columns.keys())
                     csvwriter.writerows(rows)
