@@ -73,10 +73,13 @@ def SQLiteTable(initCreate: bool = True, drop_on_create: bool = False):
                 else:
                     return f"SELECT * FROM {self.name}"
             
-            def get_total_rows(self):
+            def get_total_rows(self, filter=None):
                 with self.connect() as database:
                     cursor = database.cursor()
-                    cursor.execute(f"SELECT Count(*) FROM {self.name}")
+                    if not filter:
+                        cursor.execute(f"SELECT Count(*) FROM {self.name}")
+                    else:
+                        cursor.execute(f"SELECT Count(*) FROM {self.name} WHERE {filter[0]} LIKE '%{filter[1]}%'")
                     return cursor.fetchall()[0][0]
                 
             def validate(self, value):
@@ -233,12 +236,16 @@ def SQLiteTable(initCreate: bool = True, drop_on_create: bool = False):
                 with self.connect() as database:
                     cursor = database.cursor()
                     cursor.executemany(self._delete_sql(column=column), [(match, ) for match in matches])
+                
 
-            def paginate(self, page, limit: int = 10, convert_data: bool = True):
+            def paginate(self, page, filter=None, limit: int = 10, convert_data: bool = True):
                 with self.connect() as db:
                     cursor = db.cursor()
                     offset = (page - 1) * limit
-                    cursor.execute(f"SELECT * FROM {self.name} LIMIT ? OFFSET ?", (limit, offset))
+                    if not filter:
+                        cursor.execute(f"SELECT * FROM {self.name} LIMIT ? OFFSET ?", (limit, offset))
+                    else:
+                        cursor.execute(f"SELECT * FROM {self.name} WHERE {filter[0]} LIKE '%{filter[1]}%' LIMIT ? OFFSET ?", (limit, offset))
                     batch = cursor.fetchall()
 
                     batch = self.unpack_data(rows=batch)
