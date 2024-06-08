@@ -3,6 +3,20 @@ import sqlite3, pathlib, csv
 from collections import namedtuple
 from .exceptions import ImproperPath
 
+class Query(list):
+    def __init__(self, statement, data):
+        self.statement = statement
+        self.data = data
+
+    def first(self):
+        return self[0]
+    
+    def last(self):
+        return self[-1]
+    
+    def fetch(self, index):
+        return self[index]
+
 def SQLiteTable(initCreate: bool = True, drop_on_create: bool = False):
     """Decorates a class to be a table; 3 arguments must be assigned in the Class block:
     path_to_database, name, columns.
@@ -262,6 +276,31 @@ def SQLiteTable(initCreate: bool = True, drop_on_create: bool = False):
                     csvwriter = csv.writer(csvfile)
                     csvwriter.writerow(self.columns.keys())
                     csvwriter.writerows(rows)
+
+            def query(self, query: str, data: list, convert_data=True):
+
+                query: Query = Query(query, data)
+
+                with self.connect() as db:
+                    cursor = db.cursor()
+
+                    fetched_items = []
+                    for item in query.data:
+                        if isinstance(item, tuple):
+                            cursor.execute(f"SELECT * FROM {self.name} {query.statement}", item)
+                        else:
+                            cursor.execute(f"SELECT * FROM {self.name} {query.statement}", (item, ))
+                        fetched_items += cursor.fetchall()
+
+                    batch = self.unpack_data(rows=fetched_items)
+                    # TODO:: this is where we need to actually column_type.unpack the data by types
+                    if convert_data:
+                        batch = self.convert_data(batch)
+
+                    for item in batch:
+                        query.append(item)
+
+                    return query
         
         return SQLITETable
     return wrapper
