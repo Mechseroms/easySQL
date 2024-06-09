@@ -87,6 +87,24 @@ def SQLiteTable(initCreate: bool = True, drop_on_create: bool = False):
                 else:
                     return f"SELECT * FROM {self.name}"
             
+            def query_get_total_rows(self, query, data,filter=None):
+                with self.connect() as database:
+                    cursor = database.cursor()
+                    cursor.execute(f"SELECT Count(*) FROM {self.name} {query}", data)
+                    return cursor.fetchall()[0][0]
+            
+            def MAX(self, column):
+                with self.connect() as database:
+                    cursor = database.cursor()
+                    cursor.execute(f"SELECT MAX({column}) FROM {self.name}")
+                    return cursor.fetchone()[0]
+            
+            def MIN(self, column):
+                with self.connect() as database:
+                    cursor = database.cursor()
+                    cursor.execute(f"SELECT MIN({column}) FROM {self.name}")
+                    return cursor.fetchone()[0]
+
             def get_total_rows(self, filter=None):
                 with self.connect() as database:
                     cursor = database.cursor()
@@ -250,7 +268,19 @@ def SQLiteTable(initCreate: bool = True, drop_on_create: bool = False):
                 with self.connect() as database:
                     cursor = database.cursor()
                     cursor.executemany(self._delete_sql(column=column), [(match, ) for match in matches])
-                
+
+            def query_paginate(self, query, data, convert_data: bool = True):
+                with self.connect() as db:
+                    cursor = db.cursor()
+                    cursor.execute(f"SELECT * FROM {self.name} {query}", data)
+                    batch = cursor.fetchall()
+
+                    batch = self.unpack_data(rows=batch)
+                    # TODO:: this is where we need to actually column_type.unpack the data by types
+                    if not convert_data:
+                        return batch
+                    
+                    return self.convert_data(batch) 
 
             def paginate(self, page, filter=None, limit: int = 10, convert_data: bool = True):
                 with self.connect() as db:
