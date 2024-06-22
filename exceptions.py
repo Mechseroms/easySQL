@@ -4,6 +4,6 @@ class ImproperPath(Exception):
         super().__init__(self.message)
 
 class ValidationFailed(Exception):
-    def __init__(self):
-        self.message = f"Column had inaccurate validation, please ensure it has the correct formatting..."
+    def __init__(self, column_name):
+        self.message = f"Column {column_name} had inaccurate validation, please ensure it has the correct formatting..."
         super().__init__(self.message)

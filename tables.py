@@ -216,7 +216,12 @@ def SQLiteTable(initCreate: bool = True, drop_on_create: bool = False):
             def insert_row(self, data: tuple):
                 query = namedtuple('Query', ['query', 'data'])
                 if len(data) == self.columns_validation:
-                    packed_data = [self.validate(column_type.validate_and_pack(data[i])) for i, column_type in enumerate(self.parsed_non_auto_columns.values())]
+                    index = 0
+                    packed_data = []
+                    for column_name, column_type in self.parsed_non_auto_columns.items():
+                        v = self.validate(column_type.validate_and_pack(data[index], column_name=column_name))
+                        packed_data.append(v)
+                        index += 1
                     query = query(query=f"INSERT INTO {self.name}{self._insert_sql}", data=tuple(packed_data))
                 else:
                     query = query(query=False, data= f"passed data to {self.name} is not the right length of entries")

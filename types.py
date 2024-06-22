@@ -19,14 +19,14 @@ class TypeComplex:
         string = f"{self.type} {'UNIQUE ' if self.isUnique else ''}{'PRIMARY KEY ' if self.isPrimaryKey else ''}{'AUTOINCREMENT' if self.isAutoIncremental else ''}"
         return string.strip()
     
-    def validate(self, data):
+    def validate(self, data, column_name: str = "Unknown"):
         if data:
             return True
         elif self.useDefault:
             return self.default
         else:
             print(data)
-            raise ValidationFailed
+            raise ValidationFailed(column_name)
     
     def pack(self,data):
         """ packs the data for insertion into database """
@@ -36,8 +36,8 @@ class TypeComplex:
         """ unpacks the data for fetching from database """
         return data
 
-    def validate_and_pack(self, data):
-        if self.validate(data): return self.pack(data)
+    def validate_and_pack(self, data, column_name: str = "Unknown"):
+        if self.validate(data, column_name=column_name): return self.pack(data)
 
 class DictionaryComplex(TypeComplex):
     def unpack(self, data: str) -> dict:
@@ -52,11 +52,11 @@ class DictionaryComplex(TypeComplex):
         data = data + tag
         return data.replace('"', '\"')
     
-    def validate(self, data):
+    def validate(self, data, column_name: str = "unknown"):
         if isinstance(data, dict):
             return True
         else:
-            raise ValidationFailed
+            raise ValidationFailed(column_name)
 
 class ListComplex(TypeComplex):
     def unpack(self, data: str) -> dict:
@@ -71,11 +71,11 @@ class ListComplex(TypeComplex):
         data = data + tag
         return data.replace('"', '\"')
     
-    def validate(self, data):
+    def validate(self, data, column_name: str = "Unknown"):
         if isinstance(data, list):
             return True
         else:
-            raise ValidationFailed
+            raise ValidationFailed(column_name)
 
 
 class JSONTypeComplex(TypeComplex):
@@ -90,11 +90,11 @@ class ChoiceComplex(TypeComplex):
         super().__init__(type=type, useDefault=useDefault, default=default)
         self.choices = choices
 
-    def validate(self, data):
+    def validate(self, data, column_name: str = "Unknown"):
         if data in self.choices:
             return True
         else:
-            raise ValidationFailed
+            raise ValidationFailed(column_name)
         
 STRING = TypeComplex(type='string', useDefault=True, default='')
 STRING.__doc__ = "This is a basic TypeComplex to create a column in SQL that expects a string type."
@@ -102,11 +102,11 @@ STRING.__doc__ = "This is a basic TypeComplex to create a column in SQL that exp
 INTEGER = TypeComplex(type='integer', useDefault=True, default=0)
 INTEGER.__doc__ = "This is a basic TypeComplex to Create a column in SQL that expects a integer type."
 
-def validate(data):
+def validate(data, column_name: str = "Unknown"):
     if data or str(data) == "0":
             return True
     else:
-        raise ValidationFailed
+        raise ValidationFailed(column_name)
     
 INTEGER.validate = validate
 
