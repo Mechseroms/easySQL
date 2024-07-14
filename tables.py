@@ -9,10 +9,16 @@ class Query(list):
         self.data = data
 
     def first(self):
-        return self[0]
+        if self != []:
+            return self[0]
+        else:
+            return []
     
     def last(self):
-        return self[-1]
+        if self != []:
+            return self[-1]
+        else:
+            return []
     
     def fetch(self, index):
         return self[index]
